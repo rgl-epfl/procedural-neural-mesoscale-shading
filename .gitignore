@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.pixi/
+/data/
+runs/
+.DS_Store

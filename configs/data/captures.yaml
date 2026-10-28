@@ -1,0 +1,8 @@
+# the released captures: the photographs with their poses (dataset.json)
+dataset: datasets.Photos
+# a released material, loaded from <data_root>/<material> and downloaded there if missing
+material: ${material.name}
+root: ${data_root}
+download: true
+# a folder of your own captures to use instead (never downloaded)
+path: null

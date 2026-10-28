@@ -1,0 +1,35 @@
+# Coarse stage: our NeuMIP-inspired model (latent texture, decoder, parallax offset),
+# trained on single samples with a log-space MSE.
+name: coarse
+method:
+  _target_: methods.torch_methods.TorchCoarseMethod
+  n: 30000
+  lr: 0.001
+  dataset:
+    _target_: ${data.dataset}
+    filter: random.*.exr
+    material_uv_crop: [[0.0, 0.0], [1.0, 1.0]]
+    image_scale: 0.5
+    scene_scale: 1.0
+    sample_scale: 70
+    emitter_radius: 4.0
+    radiance: 16000.0
+    material: ${data.material}
+    root: ${data.root}
+    path: ${data.path}
+    download: ${data.download}
+  sampler: {_target_: samplers.NativeTorchSurfaceSampler, n_uv: 16384, n_dir: 32}
+  bsdf:
+    _target_: bsdfs.torch_bsdfs.TorchCoarse
+    offset:
+      _target_: bsdfs.torch_bsdfs.TorchNeuralOffset
+      directional: true
+      encoding: &latent {_target_: textures.torch_textures.TorchFiltered2D, resolution: 512, n_channels: 8}
+      decoder: &decoder {_target_: mlp_torch.TorchMLP, _partial_: true, bias: true, width: 64, n_hidden: 3}
+    offset_start: 100
+    offset_stop: 10000
+    bsdf:
+      _target_: bsdfs.torch_bsdfs.TorchNeuralBSDF
+      encoding: *latent
+      decoder: *decoder
+  loss: {_target_: losses.MSELoss}

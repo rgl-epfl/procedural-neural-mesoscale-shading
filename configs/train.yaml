@@ -1,0 +1,20 @@
+# Trains one stage of the method on one material:
+#   python train.py material=fabric_hex stage=coarse
+#   python train.py material=fabric_hex stage=detail coarse=runs/fabric_hex_coarse/latest/checkpoint.pkl
+defaults:
+  - material: fabric_hex
+  - data: captures
+  - stage: coarse
+  - _self_
+
+# folder holding the released captures (default: $MESOSCALE_DATA or ~/.cache/mesoscale)
+data_root: null
+# the run's name: runs/<name>/<datetime>, with runs/<name>/latest
+name: ${material.name}_${stage.name}
+seed: 42
+# the detail stage starts from the coarse run's checkpoint
+coarse: null
+
+hydra:
+  run:
+    dir: runs/${name}/${now:%Y-%m-%d_%H-%M-%S}

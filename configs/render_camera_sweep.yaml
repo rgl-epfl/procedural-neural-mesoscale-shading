@@ -1,0 +1,24 @@
+# Render full-frame camera sweeps:
+#   python render_camera_sweep.py material=fabric_hex chkpt=runs/fabric_hex_detail/latest/checkpoint.pkl
+defaults:
+  - material: fabric_hex
+  - data: captures
+  - _self_
+
+# folder holding the released captures (default: $MESOSCALE_DATA or ~/.cache/mesoscale)
+data_root: null
+chkpt: ???
+image_scale: 0.4
+# Sample-plane half-extent in mm; UV coordinates span the full rectangle.
+plate_scale: 70
+spp: 256
+# View range [first, last); null includes all remaining views.
+first: 0
+last: null
+# Linear exposure multiplier before clipping and sRGB encoding.
+exposure: 1.0
+name: ${material.name}_camera_sweep
+
+hydra:
+  run:
+    dir: runs/${name}/${now:%Y-%m-%d_%H-%M-%S}

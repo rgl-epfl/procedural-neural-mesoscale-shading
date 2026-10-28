@@ -1,0 +1,47 @@
+# Detail stage: 4D Perlin noise decoded on top of the frozen coarse model,
+# trained with the style loss on image blocks at four exposures.
+name: detail
+method:
+  _target_: methods.torch_methods.TorchDetailMethod
+  n: 10000
+  lr: 0.001
+  exposures: [0.0, -2.0, -4.0, -6.0]
+  freeze: ['^offset\.', '^bsdf\.(decoder|encoding|_encoding)\.']
+  dataset:
+    _target_: ${data.dataset}
+    filter: random.*.exr
+    material_uv_crop: [[0.0, 0.0], [1.0, 1.0]]
+    image_scale: 0.5
+    scene_scale: 1.0
+    sample_scale: 70
+    emitter_radius: 4.0
+    radiance: 16000.0
+    material: ${data.material}
+    root: ${data.root}
+    path: ${data.path}
+    download: ${data.download}
+  sampler: {_target_: samplers.NativeTorchBlockSensorSampler, n_blocks: 8, n_uv: 32, block_size: [64, 64]}
+  bsdf:
+    _target_: bsdfs.torch_bsdfs.TorchParallaxDetail
+    offset:
+      _target_: bsdfs.torch_bsdfs.TorchNeuralOffset
+      directional: true
+      encoding: &latent {_target_: textures.torch_textures.TorchFiltered2D, resolution: 512, n_channels: 8}
+      decoder: &decoder {_target_: mlp_torch.TorchMLP, _partial_: true, bias: true, width: 64, n_hidden: 3}
+    bsdf:
+      _target_: bsdfs.torch_bsdfs.TorchPerlinDetail
+      encoding: *latent
+      decoder: *decoder
+      noise_4d:
+        _target_: textures.torch_perlin.TorchPerlinLayers4D
+        resolution: 2048
+        n_levels: 4
+        n_channels: 4
+        const: false
+        dir_freq_ratio: 0.03125
+      noise_decoder: *decoder
+  loss:
+    _target_: losses.torch_losses.TorchStyleLoss
+    loss: {_target_: losses.style.RelaxedOTLoss}
+    mean: true
+    exposures: [0.0]
